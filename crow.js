@@ -27,7 +27,6 @@ app.get('/api/:name', function (req, res) {
     })
 
     setTimeout(function () {
-
         for (var j = 0; j < ddd.length; j++) {
             let hash = []
             request(ddd[j], function (err, response, body) {
@@ -37,11 +36,18 @@ app.get('/api/:name', function (req, res) {
                 let image = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.left_area > div.event_thumbnail.main_thumbnail > img')
                 let date = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > ul > li:nth-child(1) > p')
                 let iframe = $('#eventDetail > iframe')
-                let limit = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > form > div.group_area > div > p > span.date')
-                for (var i = 0; i < ddd.length; i++) {
-                    let hashtag = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(i) + ')')
-                    console.log(hashtag.children)
-                }
+                let hashtag1 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(1)+ ')')
+                let hashtag2 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(2)+ ')')
+                let hashtag3 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(3)+ ')')
+                let hashtag4 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(4)+ ')')
+                let hashtag5 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(5)+ ')')
+                hash.push(hashtag1[0].children[0].data)
+                hash.push(hashtag2[0].children[0].data)
+                hash.push(hashtag3[0].children[0].data)
+                hash.push(hashtag4[0].children[0].data)
+                if(hashtag5[0]!== undefined)
+                    hash.push(hashtag5[0].children[0].data)
+
                 result.info.push({
                     name: titleArr[0].attribs.title,
                     img: image[0].attribs.src,
@@ -66,7 +72,7 @@ app.get('/api/:name', function (req, res) {
                 // result.limitdate.push(limit[0].children[0].data)
             })
         }
-    }, 3000)
+    }, 5000)
 
     setTimeout(function () {
         let tmp = []
@@ -107,7 +113,7 @@ app.get('/api/:name', function (req, res) {
             }
         }
         res.json(result)
-    }, 10000)
+    }, 12000)
 })
 
 app.listen(3000, function () {

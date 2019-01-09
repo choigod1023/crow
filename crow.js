@@ -9,7 +9,8 @@ var db = mongoose.connection;
 
 app.get('/api/:name', function (req, res) {
     let name = req.params.name;
-    let url = `https://onoffmix.com/event/main?s=${name}`
+    
+    let url = `https://onoffmix.com/event/main/?c=${name}`
     let base = "https://onoffmix.com"
     let hash1, hash2, hash3, hash4, hash5
     let hash = {
@@ -19,6 +20,7 @@ app.get('/api/:name', function (req, res) {
         info: []
     }
     let ddd = []
+    console.log(url)
     request(url, function (err, response, body) {
 
         const $ = cheerio.load(body);
@@ -30,14 +32,14 @@ app.get('/api/:name', function (req, res) {
             if (titleArr[0] == undefined && link[0] == undefined && peopleArr[0] == undefined)
                 break
             ddd.push(base + link[0].attribs.href)
-
         }
     })
-
+    ddd.push("https://onoffmix.com/event/93998","https://onoffmix.com/event/142090","https://onoffmix.com/event/119300","https://onoffmix.com/event/147627","https://onoffmix.com/event/139054")
     setTimeout(function () {
         for (var j = 0; j < ddd.length; j++) {
 
             let datetmp;
+            let own;
             request(ddd[j], function (err, response, body) {
                 const $ = cheerio.load(body);
                 let titleArr = $(`#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > h3`)
@@ -50,14 +52,23 @@ app.get('/api/:name', function (req, res) {
                 let hashtag3 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(3) + ')')
                 let hashtag4 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(4) + ')')
                 let hashtag5 = $('#content > div.content_wrapping.max_width_area > section.event_summary > div.right_area > div.tags > a:nth-child(' + String(5) + ')')
-                hash1 = hashtag1[0].children[0].data.split("#")[1]
-                hash2 = hashtag2[0].children[0].data.split("#")[1]
-                hash3 = hashtag3[0].children[0].data.split("#")[1]
-                hash4 = hashtag4[0].children[0].data.split("#")[1]
+                let owner = $('#hostInfo > li.host_name > a')
+                if (hashtag1[0] !== undefined)
+                    hash1 = hashtag1[0].children[0].data.split("#")[1]
+                if (hashtag2[0] !== undefined)
+                    hash2 = hashtag2[0].children[0].data.split("#")[1]
+                if (hashtag3[0] !== undefined)
+                    hash3 = hashtag3[0].children[0].data.split("#")[1]
+                if (hashtag4[0] !== undefined)
+                    hash4 = hashtag4[0].children[0].data.split("#")[1]
                 if (hashtag5[0] !== undefined)
                     hash5 = hashtag5[0].children[0].data.split("#")[1]
                 else
                     hash5 = undefined
+                if(owner[0]!==undefined)
+                    own = owner[0].children[0].data
+                else
+                    own = "본 모임은 종료된 모임입니다."
                 hash.info.push({
                     temp1: hash1,
                     temp2: hash2,
@@ -79,10 +90,15 @@ app.get('/api/:name', function (req, res) {
                         startDate: date[0].children[0].data.split(" ~")[0].split(" (")[0].replace(".", "-").replace(".", "-"),
                         endDate: datetmp
                     },
-                    tag: [{
+                    tags: [{
+                        "color":"blue",
+                        "text":"온오프믹스",
+                    },
+                    {
                         "color": "green",
                         "text": "외부대회",
                     }],
+                    owner: own,
                     link: base + iframe[0].attribs.src.split("/content")[0],
                     isJoin: true,
                     isApplicable: true
@@ -148,20 +164,20 @@ app.get('/api/:name', function (req, res) {
                 if (hashtagging[j] === undefined)
                     break
                 else if (hashtagging[j].indexOf("초등") != -1 || hashtagging[j].indexOf("중등") != -1 || hashtagging[j].indexOf("고등") != -1 || hashtagging[j].indexOf("대학") != -1) {
-                    result.info[i].tag.push({
+                    result.info[i].tags.push({
                         "color": "red",
                         "text": hashtagging[j]
                     })
                 }
                 else if (hashtagging[j].indexOf("해커톤") != -1 || hashtagging[j].indexOf("공모전") != -1 || hashtagging[j].indexOf("캠프") != -1) {
-                    result.info[i].tag.push({
+                    result.info[i].tags.push({
                         "color": "orange",
                         "text": hashtagging[j]
                     })
                 }
 
                 else {
-                    result.info[i].tag.push({
+                    result.info[i].tags.push({
                         "color": "grey",
                         "text": hashtagging[j]
                     })
@@ -174,16 +190,12 @@ app.get('/api/:name', function (req, res) {
         client.connect(err => {
             const collection = client.db("dicon").collection("contestdatas");
             console.log(result.info)
-            //for (var i = 0; i < result.info.length; i++) {
-            //    collection.insertOne(result.info[i]).then()
-            //}
+            collection.dropIndexes();
             collection.insertMany(result.info,function(err,data){
                 console.log(err);
             })
             client.close();
         });
-
-
         res.json(result)
 
     }, 12000)
